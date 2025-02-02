@@ -1,0 +1,72 @@
+---
+- name: Update apt cache
+  apt:
+    update_cache: yes
+
+- name: Install required packages
+  apt:
+    name:
+      - apache2
+      - mariadb-server
+      - php8.1
+      - php8.1-{mbstring,gd,curl,xml,intl,bcmath,json,mysql,zip}
+      - certbot
+      - python3-certbot-apache
+    state: present
+
+- name: Start and enable MariaDB service
+  service:
+    name: mariadb
+    state: started
+    enabled: yes
+
+- name: Download Nextcloud
+  unarchive:
+    src: https://download.nextcloud.com/server/releases/latest.zip
+    dest: /var/www/
+    remote_src: yes
+
+- name: Set permissions for Nextcloud directory
+  file:
+    path: /var/www/nextcloud
+    owner: www-data
+    group: www-data
+    recurse: yes
+
+- name: Create database for Nextcloud
+  mysql_db:
+    name: "{{ db_name }}"
+    state: present
+
+- name: Create database user for Nextcloud
+  mysql_user:
+    name: "{{ db_user }}"
+    password: "{{ db_password }}"
+    priv: "{{ db_name }}.*:ALL"
+    host: localhost
+
+- name: Configure Apache for Nextcloud
+  template:
+    src: apache.conf.j2
+    dest: /etc/apache2/sites-available/nextcloud.conf
+  notify: Restart Apache
+
+- name: Enable Nextcloud site in Apache
+  command: a2ensite nextcloud.conf
+
+- name: Disable default Apache site
+  command: a2dissite 000-default.conf
+
+- name: Install Certbot
+  apt:
+    name:
+      - certbot
+      - python3-certbot-apache
+    state: present
+
+- name: Obtain SSL certificate using Certbot
+  command: >
+    certbot --non-interactive --agree-tos --email {{ admin_email }}
+    --webroot -w /var/www/nextcloud -d {{ domain_name }}
+  environment:
+    PATH: "/usr/bin:/bin"

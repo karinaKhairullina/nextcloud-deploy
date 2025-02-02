@@ -1,0 +1,4 @@
+db_name: nextcloud
+db_user: nextcloud_user
+db_password: "{{ lookup('env', 'DB_PASSWORD') }}"
+admin_email: admin@{{ domain_name }}

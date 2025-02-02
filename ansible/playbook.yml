@@ -1,0 +1,7 @@
+---
+- name: Install and configure Nextcloud
+  hosts: nextcloud
+  become: yes
+  gather_facts: yes
+  roles:
+    - nextcloud

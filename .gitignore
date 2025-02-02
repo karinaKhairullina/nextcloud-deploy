@@ -1,0 +1,13 @@
+terraform/.terraform.lock.hcl
+terraform/.DS_Store
+terraform/.terraform/providers/registry.terraform.io/yandex-cloud/yandex/0.80.0/darwin_arm64/CHANGELOG.md
+terraform/.terraform/providers/registry.terraform.io/yandex-cloud/yandex/0.80.0/darwin_arm64/LICENSE
+terraform/.terraform/providers/registry.terraform.io/yandex-cloud/yandex/0.80.0/darwin_arm64/terraform-provider-yandex_v0.80.0
+terraform/.terraform/providers/registry.terraform.io/yi-jiayu/telegram/0.3.1/darwin_arm64/LICENSE
+terraform/.terraform/providers/registry.terraform.io/yi-jiayu/telegram/0.3.1/darwin_arm64/terraform-provider-telegram_v0.3.1
+terraform/key.json
+terraform/terraform.tfstate.backup
+terraform/terraform.tfstate
+terraform/terraform.tfvars
+terraform/.terraform/providers/registry.terraform.io/yandex-cloud/yandex/0.80.0/darwin_arm64/README.md
+terraform/.terraform/providers/registry.terraform.io/yi-jiayu/telegram/0.3.1/darwin_arm64/README.md
