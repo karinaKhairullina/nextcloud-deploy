@@ -23,3 +23,4 @@ variable "key_file_path" {
   type        = string
   description = "Ключ сервисного аккаунта"
 }
+

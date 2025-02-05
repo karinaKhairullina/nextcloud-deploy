@@ -7,22 +7,56 @@
   apt:
     name:
       - apache2
-      - mariadb-server
       - php8.1
-      - php8.1-{mbstring,gd,curl,xml,intl,bcmath,json,mysql,zip}
+      - php8.1-mbstring
+      - php8.1-gd
+      - php8.1-curl
+      - php8.1-xml
+      - php8.1-intl
+      - php8.1-bcmath
+      - php8.1-zip
+      - php8.1-pgsql
       - certbot
       - python3-certbot-apache
+      - unzip
+      - postgresql
+      - postgresql-contrib
+      - python3-psycopg2
+      - ssl-cert
     state: present
 
-- name: Start and enable MariaDB service
-  service:
-    name: mariadb
+- name: Start and enable PostgreSQL service
+  systemd:
+    name: postgresql
     state: started
     enabled: yes
 
+- name: Create database for Nextcloud
+  community.postgresql.postgresql_db:
+    name: "{{ db_name }}"
+    state: present
+    login_user: postgres
+    login_password: "{{ db_root_password }}"
+
+- name: Create database user for Nextcloud
+  community.postgresql.postgresql_user:
+    name: "{{ db_user }}"
+    password: "{{ db_password }}"
+    state: present
+    db: "{{ db_name }}"
+    role_attr_flags: CREATEDB
+    login_user: postgres
+    login_password: "{{ db_root_password }}"
+  become: true
+
 - name: Download Nextcloud
+  get_url:
+    url: https://download.nextcloud.com/server/releases/latest.zip
+    dest: /tmp/nextcloud.zip
+
+- name: Unzip Nextcloud
   unarchive:
-    src: https://download.nextcloud.com/server/releases/latest.zip
+    src: /tmp/nextcloud.zip
     dest: /var/www/
     remote_src: yes
 
@@ -32,18 +66,6 @@
     owner: www-data
     group: www-data
     recurse: yes
-
-- name: Create database for Nextcloud
-  mysql_db:
-    name: "{{ db_name }}"
-    state: present
-
-- name: Create database user for Nextcloud
-  mysql_user:
-    name: "{{ db_user }}"
-    password: "{{ db_password }}"
-    priv: "{{ db_name }}.*:ALL"
-    host: localhost
 
 - name: Configure Apache for Nextcloud
   template:
@@ -66,7 +88,7 @@
 
 - name: Obtain SSL certificate using Certbot
   command: >
-    certbot --non-interactive --agree-tos --email {{ admin_email }}
+    certbot certonly --non-interactive --agree-tos --email {{ admin_email }}
     --webroot -w /var/www/nextcloud -d {{ domain_name }}
   environment:
     PATH: "/usr/bin:/bin"

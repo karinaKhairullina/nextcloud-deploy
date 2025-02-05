@@ -17,45 +17,68 @@ resource "yandex_vpc_security_group" "nextcloud_sg" {
   name        = "${var.project_name}-sg"
   network_id  = yandex_vpc_network.network.id
 
+  # Входящие правила (ingress)
   ingress {
     description = "SSH access for management"
     port        = 22
     protocol    = "TCP"
-    v4_cidr_blocks = ["0.0.0.0/0"] # Разрешить SSH из любой точки (можно ограничить)
+    v4_cidr_blocks = ["0.0.0.0/0"] 
   }
 
   ingress {
     description = "HTTP access for Nextcloud"
     port        = 80
     protocol    = "TCP"
-    v4_cidr_blocks = ["0.0.0.0/0"] # Разрешить HTTP из любой точки
+    v4_cidr_blocks = ["0.0.0.0/0"] 
   }
 
   ingress {
     description = "HTTPS access for Nextcloud"
     port        = 443
     protocol    = "TCP"
-    v4_cidr_blocks = ["0.0.0.0/0"] # Разрешить HTTPS из любой точки
+    v4_cidr_blocks = ["0.0.0.0/0"] 
+  }
+
+  # Исходящие правила (egress)
+  egress {
+    description = "Allow outbound HTTP traffic for APT"
+    protocol    = "TCP"
+    port        = 80
+    v4_cidr_blocks = ["0.0.0.0/0"] 
+  }
+
+  egress {
+    description = "Allow outbound HTTPS traffic for APT"
+    protocol    = "TCP"
+    port        = 443
+    v4_cidr_blocks = ["0.0.0.0/0"] 
+  }
+
+  egress {
+    description = "Allow outbound DNS traffic"
+    protocol    = "UDP"
+    port        = 53
+    v4_cidr_blocks = ["0.0.0.0/0"] 
   }
 
   egress {
     description = "Allow all outbound TCP traffic"
     protocol    = "TCP"
-    port        = 0 # Разрешить все порты
-    v4_cidr_blocks = ["0.0.0.0/0"] # Разрешить исходящий трафик в интернет
+    port        = 0 
+    v4_cidr_blocks = ["0.0.0.0/0"]
   }
 
   egress {
     description = "Allow all outbound UDP traffic"
     protocol    = "UDP"
-    port        = 0 # Разрешить все порты
-    v4_cidr_blocks = ["0.0.0.0/0"] # Разрешить исходящий трафик в интернет
+    port        = 0 
+    v4_cidr_blocks = ["0.0.0.0/0"] 
   }
 
   egress {
     description = "Allow all outbound ICMP traffic"
     protocol    = "ICMP"
-    v4_cidr_blocks = ["0.0.0.0/0"] # Разрешить ICMP для диагностики
+    v4_cidr_blocks = ["0.0.0.0/0"] 
   }
 }
 
@@ -98,4 +121,20 @@ resource "yandex_compute_instance" "nextcloud_vm" {
   provisioner "local-exec" {
     command = "echo ${self.network_interface.0.nat_ip_address} > inventory.ini"
   }
+}
+
+# Создание DNS-зоны
+resource "yandex_dns_zone" "public_zone" {
+  name = "vvot44-public-zone" 
+  zone = "vvot44.itiscl.ru."  
+  public = true               
+}
+
+
+resource "yandex_dns_recordset" "nextcloud_record" {
+  zone_id = yandex_dns_zone.public_zone.id 
+  name    = "project"                     
+  type    = "A"
+  ttl     = 300
+  data    = [yandex_compute_instance.nextcloud_vm.network_interface.0.nat_ip_address] 
 }
