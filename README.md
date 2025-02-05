@@ -1,4 +1,3 @@
-<img width="1440" alt="Снимок экрана 2025-02-05 в 20 57 56" src="https://github.com/user-attachments/assets/fd14ddd2-fd7d-4fee-ae1f-c05e9c9222a8" /># Nextcloud 
 
 
 1. **Запуск Ansible playbook**:
